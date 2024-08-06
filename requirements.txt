@@ -1,0 +1,8 @@
+argparse
+numpy
+panda
+matplotlib
+torch
+torchvision
+torchaudio
+pillow
