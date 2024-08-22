@@ -1,0 +1,10 @@
+Flask
+flask-swagger-ui
+flask-cors
+numpy
+panda
+matplotlib
+torch
+torchvision
+torchaudio
+pillow

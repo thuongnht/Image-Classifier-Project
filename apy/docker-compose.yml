@@ -1,0 +1,21 @@
+version: "3.8"
+services:
+
+  eeg:
+    image: eeg
+    container_name: eeg
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - MAPPING_PORT=5555
+    ports:
+      - "127.0.0.1:5555:5555"
+    volumes:
+      - "./configs:/opt/app/configs"
+      - "./models:/opt/app/models"
+
+
+
+

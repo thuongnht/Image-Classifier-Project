@@ -173,7 +173,7 @@ def train_model(model=None, criterion=None, optimizer=None,
     # keeping track of best weights
     best_model = copy.deepcopy(model.state_dict())
     # track change in validation loss
-    validate_loss_min = np.Inf
+    validate_loss_min = np.inf
 
     for epoch in range(num_epochs):
         begin = time.time()
