@@ -404,7 +404,7 @@ def main():
         print(ex)
         parser.print_help()
     except Exception as ex:
-        print(ex)
+        raise ex
     pass
 
 

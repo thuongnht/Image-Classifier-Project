@@ -2,7 +2,7 @@ Flask
 flask-swagger-ui
 flask-cors
 numpy
-panda
+pandas
 matplotlib
 torch
 torchvision

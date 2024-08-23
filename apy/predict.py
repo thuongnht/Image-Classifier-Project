@@ -104,7 +104,7 @@ def process_image(image_path=None, transform=test_data_transforms):
     loaded_image = Image.open(image_path)
     img_tensor = transform(loaded_image).float()
     img_tensor = img_tensor.unsqueeze(0)
-    return img_tensor
+    return img_tensor, loaded_image
 
 
 def predict(image_path=None, model=None, topk=default_topk, train_on_gpu=False):
@@ -124,7 +124,7 @@ def predict(image_path=None, model=None, topk=default_topk, train_on_gpu=False):
     # Class Prediction: Implement the code to predict the class from an image file
     model.eval()
     # Implement the code to predict the class from an image file
-    image_tensor = process_image(image_path)
+    image_tensor, loaded_image = process_image(image_path)
     # Enable GPU functioning for prediction, when available
     if train_on_gpu:
         image_tensor = image_tensor.cuda()
@@ -144,9 +144,9 @@ def predict(image_path=None, model=None, topk=default_topk, train_on_gpu=False):
         labels = labels.cpu()
 
     idx_to_label = {idx: label for label, idx in model.class_to_idx.items()}
-    #print(idx_to_label)
+    # print(idx_to_label)
 
-    return image_tensor, [p for p in probabilities.detach().numpy()[0]], [idx_to_label.get(idx) for idx in labels.detach().numpy()[0]]
+    return image_tensor, [p for p in probabilities.detach().numpy()[0]], [idx_to_label.get(idx) for idx in labels.detach().numpy()[0]], loaded_image
 
 
 def imshow(image, ax=None):
@@ -159,6 +159,7 @@ def imshow(image, ax=None):
     if ax is None:
         fig, ax = plt.subplots()
 
+    """
     # PyTorch tensors assume the color channel is the first dimension
     # but matplotlib assumes is the third dimension
     image = image.numpy().transpose((1, 2, 0))
@@ -170,9 +171,9 @@ def imshow(image, ax=None):
 
     # Image needs to be clipped between 0 and 1 or it looks like noise when displayed
     image = np.clip(image, 0, 1)
+    """
 
     ax.imshow(image)
-
     return ax
 
 
@@ -192,7 +193,7 @@ def display_predict(image_path=None, model=None, map_categories=None, topk=defau
         raise Exception("Path to image undefined!")
 
     # Get predictions
-    img, probs, preds = predict(image_path=image_path, model=model, topk=topk, train_on_gpu=train_on_gpu)
+    img, probs, preds, loaded_image = predict(image_path=image_path, model=model, topk=topk, train_on_gpu=train_on_gpu)
 
     # get appropriate labels
     idx_to_name = {category: map_categories[str(category)] for category in preds}
@@ -206,7 +207,7 @@ def display_predict(image_path=None, model=None, map_categories=None, topk=defau
     # Show the image
     plt.figure(figsize=(12, 5))
     ax = plt.subplot(1, 2, 1)
-    ax = imshow(img, ax=ax)
+    ax = imshow(loaded_image, ax=ax)
 
     # Set title to be the actual class
     ax.set_title(classes[0], size=20)

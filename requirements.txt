@@ -1,6 +1,6 @@
 argparse
 numpy
-panda
+pandas
 matplotlib
 torch
 torchvision
