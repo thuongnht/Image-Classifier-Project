@@ -23,7 +23,7 @@ logger.info(f"Torch cuda {'available' if torch.cuda.is_available() else 'unavail
 
 
 # STATIC Parameters
-default_category_names = 'cat_to_name.json'
+default_category_names = 'configs/cat_to_name.json'
 default_gpu_mode = True
 default_topk = 5
 

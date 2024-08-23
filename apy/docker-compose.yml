@@ -15,6 +15,7 @@ services:
     volumes:
       - "./configs:/opt/app/configs"
       - "./models:/opt/app/models"
+      - "./static:/opt/app/static"
 
 
 
