@@ -1,9 +1,6 @@
 # Imports here
 import json
 
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
 # Check torch version and CUDA status if GPU is enabled.
 import torch
 import torch.nn as nn
@@ -13,9 +10,16 @@ import torchvision.models as models
 # with random scaling, rotations, mirroring, and/or cropping
 import torchvision.transforms as transforms
 from PIL import Image
+import pandas as pd
 
-print(f"Torch version {torch.__version__}")
-print(f"Torch cuda {'available' if torch.cuda.is_available() else 'unavailable'}")
+import matplotlib.pyplot as plt, mpld3
+plt.switch_backend('Agg')
+
+import configs.config as c
+logger = c.logger(name=__name__)
+
+logger.info(f"Torch version {torch.__version__}")
+logger.info(f"Torch cuda {'available' if torch.cuda.is_available() else 'unavailable'}")
 
 
 # STATIC Parameters
@@ -37,16 +41,9 @@ test_data_transforms = transforms.Compose([
 ])
 
 
-class CustomArgumentParser(argparse.ArgumentParser):
-    def error(self, message):
-        raise Exception(f"ArgumentParser failed -> {message}")
-        pass
-
-
 def load_categories(path_category=default_category_names):
     if path_category is None:
         raise Exception("Path to model undefined!")
-
     with open(path_category, 'r') as f:
         cat_to_name = json.load(f)
     return cat_to_name
@@ -57,7 +54,7 @@ def load_model(path_model=None):
         raise Exception("Path to model undefined!")
 
     checkpoint = torch.load(path_model)
-    # print(checkpoint)
+    # logger.debug(checkpoint)
     if 'vgg19' in path_model.lower():
         model = models.vgg19(weights='VGG19_Weights.DEFAULT')
     elif 'vgg16' in path_model.lower():
@@ -80,7 +77,7 @@ def load_model(path_model=None):
 
     # model specifics
     model.class_to_idx = checkpoint['class_to_idx']
-    # print(model.class_to_idx)
+    # logger.debug(model.class_to_idx)
 
     if checkpoint['train_on_gpu']:
         model.cuda()
@@ -144,7 +141,7 @@ def predict(image_path=None, model=None, topk=default_topk, train_on_gpu=False):
         labels = labels.cpu()
 
     idx_to_label = {idx: label for label, idx in model.class_to_idx.items()}
-    # print(idx_to_label)
+    # logger.debug(idx_to_label)
 
     return image_tensor, [p for p in probabilities.detach().numpy()[0]], [idx_to_label.get(idx) for idx in labels.detach().numpy()[0]], loaded_image
 
@@ -177,7 +174,7 @@ def imshow(image, ax=None):
     return ax
 
 
-def display_predict(image_path=None, model=None, map_categories=None, topk=default_topk, train_on_gpu=False):
+def predict2html(image_path=None, model=None, path_html=None, map_categories=None, topk=default_topk, train_on_gpu=False):
     """
     Display image and preditions from model
     :param image_path:
@@ -198,20 +195,18 @@ def display_predict(image_path=None, model=None, map_categories=None, topk=defau
     # get appropriate labels
     idx_to_name = {category: map_categories[str(category)] for category in preds}
     classes = list(idx_to_name.values())
-    print(f"Probabilities {probs} <-> Labels {classes}")
-    print(f"The flower is most likely a '{classes[0]}' with about {100*probs[0]:.4f} probability!")
+    logger.info(f"Probabilities {probs} <-> Labels {classes}")
+    logger.info(f"The flower is most likely a '{classes[0]}' with about {100*probs[0]:.4f} probability!")
+    top_categories = [{"category": classes[i], "percentage": f"{100*probs[i]:.4f}%"} for i in range(len(classes))]
 
-    if train_on_gpu:
-        img = img.cpu().squeeze()
-
-    # Show the image
-    plt.figure(figsize=(12, 5))
+    # if train_on_gpu:
+    #    img = img.cpu().squeeze()
+    # show he image
+    fig = plt.figure(figsize=(12, 5))
     ax = plt.subplot(1, 2, 1)
     ax = imshow(loaded_image, ax=ax)
-
     # Set title to be the actual class
     ax.set_title(classes[0], size=20)
-
     # Plot a bar plot of predictions
     ax = plt.subplot(1, 2, 2)
     # Convert results to dataframe for plotting
@@ -219,11 +214,14 @@ def display_predict(image_path=None, model=None, map_categories=None, topk=defau
     pd_probs.sort_values('p')['p'].plot.barh(color='blue', edgecolor='k', ax=ax)
     plt.xlabel('Predicted Probability')
     plt.tight_layout()
-    plt.show()
-    pass
+    # plt.show()
+    # plot_html = mpld3.fig_to_html(fig)
+    mpld3.save_html(fig, path_html)
+
+    return top_categories, path_html
 
 
-def predict(path_image=None, path_model=None, topk=default_topk,
+def do_predict(path_image=None, path_model=None, path_html=None, topk=default_topk,
             gpu=default_gpu_mode,
             path_category=default_category_names,
             **kwargs):
@@ -231,21 +229,21 @@ def predict(path_image=None, path_model=None, topk=default_topk,
     Predict flower name from an image with predict.py along with the probability of that name. That is, you'll pass in a single image /path/to/image and return the flower name and class probability.
     """
     try:
-        print(f"Arguments {path_image}, {path_model}, {topk}")
+        logger.info(f"Arguments {path_image}, {path_model}, {topk}")
         train_on_gpu = torch.cuda.is_available() and gpu
-        print(f"Train on GPU {train_on_gpu}")
+        logger.info(f"Train on GPU {train_on_gpu}")
 
         # load categories
         map_categories = load_categories(path_category=path_category)
         # load model
         model, optimizer = load_model(path_model=path_model)
         # do prediction
-        display_predict(image_path=path_image, model=model,
-                        map_categories=map_categories,
-                        topk=topk,
-                        train_on_gpu=train_on_gpu)
+        return predict2html(image_path=path_image, model=model, path_html=path_html,
+                            map_categories=map_categories,
+                            topk=topk,
+                            train_on_gpu=train_on_gpu)
     except Exception as ex:
-        print(ex)
+        logger.info(ex, exc_info=True)
 
     pass
 

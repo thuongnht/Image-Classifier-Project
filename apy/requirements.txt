@@ -1,10 +1,12 @@
-Flask
+Flask[async]
 flask-swagger-ui
 flask-cors
 numpy
 pandas
 matplotlib
+mpld3
 torch
 torchvision
 torchaudio
 pillow
+requests-toolbelt
