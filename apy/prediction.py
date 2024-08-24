@@ -40,6 +40,8 @@ test_data_transforms = transforms.Compose([
     normalize,
 ])
 
+cache_models = {}
+
 
 def load_categories(path_category=default_category_names):
     if path_category is None:
@@ -53,6 +55,13 @@ def load_model(path_model=None):
     if path_model is None:
         raise Exception("Path to model undefined!")
 
+    if path_model in cache_models.keys():
+        o = cache_models.get(path_model) or {}
+        logger.debug("Loaded cache %s", o)
+        return o.get('model'), o.get('optimizer')
+
+    logger.debug("Loading model...")
+
     checkpoint = torch.load(path_model)
     # logger.debug(checkpoint)
     if 'vgg19' in path_model.lower():
@@ -64,7 +73,7 @@ def load_model(path_model=None):
     else:
         raise Exception(f"Sorry, Model {path_model} not supported!!!")
 
-        # freeze parameters
+    # freeze parameters
     for param in model.parameters():
         param.requires_grad = False
 
@@ -85,6 +94,11 @@ def load_model(path_model=None):
     # optimizer
     optimizer = checkpoint['optimizer']
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+
+    cache_models[path_model] = {
+        'model': model,
+        'optimizer': optimizer
+    }
 
     return model, optimizer
 

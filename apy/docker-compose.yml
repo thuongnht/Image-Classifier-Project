@@ -16,6 +16,12 @@ services:
       - "./configs:/opt/app/configs"
       - "./models:/opt/app/models"
       - "./static:/opt/app/static"
+      - type: bind
+        source: ./prediction.py
+        target: /opt/app/prediction.py
+      - type: bind
+        source: ./app.py
+        target: /opt/app/app.py
 
 
 

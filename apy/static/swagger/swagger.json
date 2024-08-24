@@ -4,7 +4,7 @@
     "title": "Prediction APIs",
     "version": "1.0.0"
   },
-  "host": "127.0.0.1:5555",
+  "host": "localhost:5555",
   "schemes": ["http", "https"],
   "consumes": ["application/json", "multipart/form-data"],
   "produces": ["application/json", "text/plain", "text/html", "multipart/form-data"],
@@ -79,7 +79,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Result which category image belongs to",
+            "description": "Result which category the image might belongs to",
             "schema": {
               "$ref": "#/definitions/Prediction_Response"
             }

@@ -7,8 +7,5 @@ WORKDIR /opt/app
 COPY requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
 
-COPY prediction.py prediction.py
-COPY app.py app.py
-
 EXPOSE $MAPPING_PORT
 CMD ["python3", "app.py"]
